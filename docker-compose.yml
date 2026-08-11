@@ -1,0 +1,36 @@
+services:
+  mongo:
+    image: mongo:4.4-focal
+    restart: unless-stopped
+    volumes:
+      - mongo-data:/data/db
+    healthcheck:
+      test: ["CMD", "mongo", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build: ./backend
+    restart: unless-stopped
+    environment:
+      MONGO_URI: mongodb://mongo:27017/outage
+      JWT_SECRET: ${JWT_SECRET:-change-this-to-a-long-random-string}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-AdMin@123}
+      TARGET: ${TARGET:-8.8.8.8}
+      PING_INTERVAL_MS: ${PING_INTERVAL_MS:-30000}
+      TZ: ${TZ:-Asia/Dhaka}
+    depends_on:
+      mongo:
+        condition: service_healthy
+
+  frontend:
+    build: ./frontend
+    restart: unless-stopped
+    ports:
+      - "${HTTP_PORT:-8030}:80"
+    depends_on:
+      - backend
+
+volumes:
+  mongo-data:

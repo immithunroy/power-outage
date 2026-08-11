@@ -1,0 +1,85 @@
+const express = require('express');
+const Outage = require('../models/Outage');
+const Ping = require('../models/Ping');
+const { buildReport, VALID } = require('../services/statsService');
+const requireAuth = require('../middleware/auth');
+
+const router = express.Router();
+
+router.get('/stats', async (req, res) => {
+  try {
+    const period = VALID.includes(req.query.period) ? req.query.period : 'day';
+    const report = await buildReport(period, req.query.end);
+    res.json(report);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+router.get('/timeline', async (req, res) => {
+  try {
+    const hours = Math.min(72, Math.max(1, Number(req.query.hours) || 24));
+    const stepMs = Math.min(5, Math.max(1, Number(req.query.stepMinutes) || 1)) * 60 * 1000;
+    const from = new Date(Date.now() - hours * 3600 * 1000);
+
+    const pings = await Ping.find({ ts: { $gte: from } }).select('ts up latency').lean();
+
+    const buckets = new Map();
+    for (const p of pings) {
+      const t = Math.floor(p.ts.getTime() / stepMs) * stepMs;
+      const key = t;
+      if (!buckets.has(key)) buckets.set(key, { t, upTotal: 0, downTotal: 0, latencies: [] });
+      const b = buckets.get(key);
+      if (p.up) b.upTotal += 1;
+      else b.downTotal += 1;
+      if (p.latency != null) b.latencies.push(p.latency);
+    }
+
+    const points = [...buckets.values()]
+      .sort((a, b) => a.t - b.t)
+      .map((b) => {
+        const total = b.upTotal + b.downTotal;
+        const avgLatency =
+          b.latencies.length > 0 ? Math.round(b.latencies.reduce((s, l) => s + l, 0) / b.latencies.length) : null;
+        return {
+          t: new Date(b.t),
+          downRatio: total ? b.downTotal / total : 0,
+          upCount: b.upTotal,
+          downCount: b.downTotal,
+          avgLatency,
+        };
+      });
+
+    res.json({ hours, stepMs, points, generatedAt: new Date() });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+router.get('/history', async (req, res) => {
+  try {
+    const limit = Math.min(200, Math.max(1, Number(req.query.limit) || 20));
+    const outages = await Outage.find().sort({ startedAt: -1 }).limit(limit).lean();
+    res.json({ outages });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+router.get('/history/export', requireAuth, async (_req, res) => {
+  try {
+    const outages = await Outage.find().sort({ startedAt: 1 }).lean();
+    const esc = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`;
+    const lines = ['"startedAt","endedAt","durationMs"'];
+    for (const o of outages) {
+      lines.push(`${esc(o.startedAt.toISOString())},${esc(o.endedAt ? o.endedAt.toISOString() : '')},${esc(o.durationMs ?? '')}`);
+    }
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', 'attachment; filename="outages.csv"');
+    res.send(lines.join('\n'));
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+module.exports = router;
