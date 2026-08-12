@@ -6,8 +6,8 @@ const settingSchema = new mongoose.Schema(
   {
     _id: { type: String, default: 'app' },
     target: { type: String, default: config.DEFAULT_TARGET, trim: true },
-    generatorTarget: { type: String, default: '', trim: true },
-    ipsTarget: { type: String, default: '', trim: true },
+    generatorTarget: { type: String, default: config.DEFAULT_GENERATOR_TARGET, trim: true },
+    ipsTarget: { type: String, default: config.DEFAULT_IPS_TARGET, trim: true },
     method: { type: String, enum: ['ping', 'tcp'], default: 'ping' },
     port: { type: Number, default: 443 },
     intervalMs: { type: Number, default: config.DEFAULT_INTERVAL_MS, min: 5000 },

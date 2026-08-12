@@ -6,5 +6,7 @@ module.exports = {
   JWT_SECRET: process.env.JWT_SECRET || 'outage-watch-dev-secret',
   ADMIN_PASSWORD: process.env.ADMIN_PASSWORD || 'AdMin@123',
   DEFAULT_TARGET: process.env.TARGET || '8.8.8.8',
+  DEFAULT_GENERATOR_TARGET: process.env.GENERATOR_TARGET || '',
+  DEFAULT_IPS_TARGET: process.env.IPS_TARGET || '',
   DEFAULT_INTERVAL_MS: Number(process.env.PING_INTERVAL_MS) || 30000,
 };

@@ -18,6 +18,8 @@ services:
       JWT_SECRET: ${JWT_SECRET:-change-this-to-a-long-random-string}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:-AdMin@123}
       TARGET: ${TARGET:-8.8.8.8}
+      GENERATOR_TARGET: ${GENERATOR_TARGET:-}
+      IPS_TARGET: ${IPS_TARGET:-}
       PING_INTERVAL_MS: ${PING_INTERVAL_MS:-30000}
       TZ: ${TZ:-Asia/Dhaka}
     depends_on:

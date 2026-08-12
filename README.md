@@ -52,14 +52,16 @@ and forward `outage.qbinternet.com` to `http://127.0.0.1:8030`.
 Open `/admin`, enter the admin password (default `AdMin@123`, change it after
 first login via **Admin → Change password**). Configure:
 
-| Setting      | Meaning                                                        |
-|--------------|----------------------------------------------------------------|
-| Target       | Host / IP to probe (e.g. a router or gateway powered by the grid) |
-| Method       | `ping` (ICMP) or `tcp` (raw TCP connect)                       |
-| Port         | For `tcp` method (e.g. 443, 80)                                |
-| Interval     | Seconds between probes (min 5)                                 |
-| Confirm down | Consecutive failures before an outage is declared              |
-| Confirm up   | Consecutive successes before recovery is declared              |
+| Setting        | Meaning                                                        |
+|----------------|----------------------------------------------------------------|
+| Target         | Grid-only host / IP to probe (AC powered, e.g. a gateway device)|
+| Generator host | Host powered by the generator (e.g. a camera). Generator counts as running when the grid is down but this host still replies |
+| IPS host       | Host on the IPS backup (e.g. a router). Shown live on the dashboard |
+| Method         | `ping` (ICMP) or `tcp` (raw TCP connect)                       |
+| Port           | For `tcp` method (e.g. 443, 80)                                |
+| Interval       | Seconds between probes (min 5)                                 |
+| Confirm down   | Consecutive failures before an outage is declared              |
+| Confirm up     | Consecutive successes before recovery is declared              |
 
 Pick a target that is **on the grid** (a Wi-Fi router, a gateway device, a VPS
 hosted in the office) so it vanishes when grid power is cut.
