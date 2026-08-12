@@ -92,7 +92,7 @@ export const translations = {
 
     probeSettings: 'Probe Settings',
     probeSettingsSub: 'Watchdog target & detection rules',
-    targetLabel: 'Host / IP to probe',
+    targetLabel: 'Grid only host (AC)',
     targetPh: 'e.g. 192.168.1.1 or 8.8.8.8',
     methodPing: 'ICMP ping',
     methodTcp: 'TCP connect',
@@ -223,7 +223,7 @@ export const translations = {
 
     probeSettings: 'প্রোব সেটিংস',
     probeSettingsSub: 'ওয়াচডগ লক্ষ্য ও শনাক্তকরণ নিয়ম',
-    targetLabel: 'পরীক্ষার হোস্ট / আইপি',
+    targetLabel: 'গ্রিড-নির্ভর হোস্ট (এসি)',
     targetPh: 'যেমন: 192.168.1.1 বা 8.8.8.8',
     methodPing: 'আইসিএমপি পিং',
     methodTcp: 'টিসিপি কানেক্ট',

@@ -27,17 +27,32 @@ function parsePingLatency(stdout) {
   return match ? Math.round(parseFloat(match[1])) : null;
 }
 
+function parseReceived(stdout, isWin) {
+  if (isWin) {
+    const m = stdout.match(/Received\s*=\s*(\d+)/i);
+    return m ? parseInt(m[1], 10) : 0;
+  }
+  const m = stdout.match(/(\d+)\s+received/i);
+  return m ? parseInt(m[1], 10) : 0;
+}
+
 async function icmpPing(target) {
   const isWin = process.platform === 'win32';
   const args = isWin
-    ? ['-n', '3', '-w', '1000', target]
-    : ['-c', '3', '-W', '1', target];
+    ? ['-n', '4', '-w', '1000', target]
+    : ['-c', '4', '-W', '1', target];
+  let stdout = '';
   try {
-    const { stdout } = await execFileAsync('ping', args, { timeout: 15000 });
-    return { up: true, latency: parsePingLatency(stdout) };
-  } catch {
-    return { up: false, latency: null };
+    const r = await execFileAsync('ping', args, { timeout: 15000 });
+    stdout = r.stdout;
+  } catch (e) {
+    stdout = (e && e.stdout) || '';
   }
+  // A host is only considered down when it answers no packets at all.
+  // Partial loss (some replies, some timeouts) is still an UP host, so a
+  // single dropped ICMP packet never produces a false short outage.
+  const received = parseReceived(stdout, isWin);
+  return { up: received > 0, latency: parsePingLatency(stdout) };
 }
 
 function tcpPing(target, port, timeoutMs) {
