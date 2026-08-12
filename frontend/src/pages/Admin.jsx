@@ -6,6 +6,8 @@ import { downloadBlob, digits, cn } from '../utils';
 
 const blankForm = {
   target: '',
+  generatorTarget: '',
+  ipsTarget: '',
   method: 'ping',
   port: 443,
   intervalSec: 30,
@@ -42,6 +44,8 @@ export default function Admin() {
       const s = await api.getSettings();
       setForm({
         target: s.target,
+        generatorTarget: s.generatorTarget,
+        ipsTarget: s.ipsTarget,
         method: s.method,
         port: s.port,
         intervalSec: Math.round(s.intervalMs / 1000),
@@ -105,6 +109,8 @@ export default function Admin() {
     try {
       await api.updateSettings({
         target: form.target,
+        generatorTarget: form.generatorTarget,
+        ipsTarget: form.ipsTarget,
         method: form.method,
         port: Number(form.port),
         intervalMs: Number(form.intervalSec) * 1000,
@@ -223,6 +229,26 @@ export default function Admin() {
               <input type="text" value={form.target} onChange={set('target')} placeholder={t('targetPh')} required />
             </label>
 
+            <label className="field">
+              <span>{t('generatorConnectedHost')}</span>
+              <input
+                type="text"
+                value={form.generatorTarget}
+                onChange={set('generatorTarget')}
+                placeholder="192.168.1.5"
+              />
+            </label>
+
+            <label className="field">
+              <span>{t('ipsConnectedHost')}</span>
+              <input
+                type="text"
+                value={form.ipsTarget}
+                onChange={set('ipsTarget')}
+                placeholder="192.168.1.1"
+              />
+            </label>
+
             <div className="field-row">
               <label className="field">
                 <span>{t('method')}</span>
@@ -271,20 +297,49 @@ export default function Admin() {
             <button type="button" className="btn btn-secondary" onClick={runTest} disabled={testBusy}>
               {testBusy ? t('testing') + '…' : t('testNow')}
             </button>
-            {testRes && (
-              <div className={cn('test-result', testRes.ok ? 'test-ok' : 'test-fail')}>
-                {testRes.ok ? t('testOk') : (testRes.error ? `${t('testFail')} (${testRes.error})` : t('testFail'))}
-                {testRes.ok && testRes.latency != null && (
-                  <span className="test-latency">{digits(testRes.latency, lang)} ms</span>
-                )}
-                {testRes.settings && (
-                  <div className="test-settings">
-                    {testRes.settings.target} · {testRes.settings.method}
-                    {testRes.settings.port}
-                  </div>
-                )}
-              </div>
-            )}
+            {testRes &&
+              (testRes.hosts ? (
+                <div className="test-hosts">
+                  {['grid', 'generator', 'ips'].map((key) => {
+                    const h = testRes.hosts[key];
+                    if (!h) return null;
+                    const nameKey = key === 'grid' ? 'gridName' : key === 'generator' ? 'generatorName' : 'ipsName';
+                    return (
+                      <div
+                        key={key}
+                        className={cn(
+                          'test-host',
+                          h.configured === false ? 'test-na' : h.up ? 'test-ok' : 'test-fail'
+                        )}
+                      >
+                        <span className="th-name">{t(nameKey)}</span>
+                        <span className="th-target">{h.target || t('notConfigured')}</span>
+                        {h.configured === false ? (
+                          <span className="th-status">{t('statusUnknown')}</span>
+                        ) : (
+                          <>
+                            <span className="th-status">{h.up ? t('statusOn') : t('statusOff')}</span>
+                            <span className="th-lat">{h.latency != null ? `${digits(h.latency, lang)} ms` : '—'}</span>
+                          </>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className={cn('test-result', testRes.ok ? 'test-ok' : 'test-fail')}>
+                  {testRes.ok ? t('testOk') : (testRes.error ? `${t('testFail')} (${testRes.error})` : t('testFail'))}
+                  {testRes.ok && testRes.latency != null && (
+                    <span className="test-latency">{digits(testRes.latency, lang)} ms</span>
+                  )}
+                  {testRes.settings && (
+                    <div className="test-settings">
+                      {testRes.settings.target} · {testRes.settings.method}
+                      {testRes.settings.port}
+                    </div>
+                  )}
+                </div>
+              ))}
           </div>
 
           <div className="card">

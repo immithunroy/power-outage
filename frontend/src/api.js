@@ -33,9 +33,10 @@ async function request(path, options = {}) {
 
 export const api = {
   status: () => request('/status'),
-  stats: (period) => request(`/stats?period=${period}`),
-  timeline: () => request('/timeline?hours=24&stepMinutes=1'),
-  history: (limit = 15) => request(`/history?limit=${limit}`),
+  stats: (period, kind) => request(`/stats?period=${period}${kind ? `&kind=${kind}` : ''}`),
+  timeline: (host) => request(`/timeline?hours=24&stepMinutes=1${host ? `&host=${host}` : ''}`),
+  history: (limit = 15, kind) =>
+    request(`/history?limit=${limit}${kind ? `&kind=${kind}` : ''}`),
   login: (password) => request('/auth/login', { method: 'POST', body: JSON.stringify({ password }) }),
 
   getSettings: () => request('/settings'),

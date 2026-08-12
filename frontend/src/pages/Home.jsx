@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { api } from '../api';
 import { useApp } from '../context/AppContext';
 import StatusHero from '../components/StatusHero';
+import PowerSources from '../components/PowerSources';
 import { PeriodChart, TimelineChart } from '../components/Charts';
 import OutageTable from '../components/OutageTable';
 import { fmtDate, fmtPercent, formatDuration, downsample, cn } from '../utils';
@@ -21,9 +22,11 @@ export default function Home() {
   const [now, setNow] = useState(Date.now());
   const [status, setStatus] = useState(null);
   const [report, setReport] = useState(null);
+  const [genReport, setGenReport] = useState(null);
   const [points, setPoints] = useState(null);
   const [outages, setOutages] = useState([]);
   const [period, setPeriod] = useState('day');
+  const [genPeriod, setGenPeriod] = useState('day');
   const [toast, setToast] = useState(null);
   const toastRef = useRef(0);
 
@@ -72,9 +75,16 @@ export default function Home() {
   }, [period]);
 
   useEffect(() => {
+    api
+      .stats(genPeriod, 'generator')
+      .then(setGenReport)
+      .catch(() => {});
+  }, [genPeriod]);
+
+  useEffect(() => {
     const load = async () => {
       try {
-        const tl = await api.timeline();
+        const tl = await api.timeline('grid');
         setPoints(downsample(tl.points, 288));
       } catch {
         /* ignore */
@@ -92,6 +102,7 @@ export default function Home() {
   }, []);
 
   const summary = report?.summary || null;
+  const genSummary = genReport?.summary || null;
   const windowLabel =
     report && summary
       ? `${fmtDate(report.windowStart, lang)} – ${fmtDate(report.end, lang)}`
@@ -106,6 +117,8 @@ export default function Home() {
       )}
 
       <StatusHero status={status} now={now} />
+
+      <PowerSources />
 
       <section className="card reports">
         <div className="reports-head">
@@ -157,6 +170,70 @@ export default function Home() {
         </div>
 
         <PeriodChart report={report} themeKey={theme} />
+      </section>
+
+      <section className="card reports">
+        <div className="reports-head">
+          <div className="reports-title">
+            <h2 className="section-title">⚙️ {t('genRunReport')}</h2>
+            <p className="section-sub">{t('genRunReportSub')}</p>
+          </div>
+          <div className="period-tabs" role="tablist">
+            {PERIODS.map((p) => (
+              <button
+                key={p}
+                type="button"
+                role="tab"
+                aria-selected={genPeriod === p}
+                className={cn('period-tab', genPeriod === p && 'active')}
+                onClick={() => setGenPeriod(p)}
+              >
+                {t(`period${p[0].toUpperCase()}${p.slice(1)}`)}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="stats-grid">
+          {genSummary && (
+            <>
+              <div className="stat-card highlight-green">
+                <span className="stat-icon">⏱️</span>
+                <span className="stat-value">{formatDuration(genSummary.totalOutageMs, lang)}</span>
+                <span className="stat-label">{t('genRunTime')}</span>
+              </div>
+              <div className="stat-card">
+                <span className="stat-icon">🔄</span>
+                <span className="stat-value">{digits(genSummary.outageCount)}</span>
+                <span className="stat-label">{t('genRunCount')}</span>
+              </div>
+              <div className="stat-card">
+                <span className="stat-icon">📈</span>
+                <span className="stat-value">{formatDuration(genSummary.longestOutageMs, lang)}</span>
+                <span className="stat-label">{t('genLongestRun')}</span>
+              </div>
+              <div className="stat-card">
+                <span className="stat-icon">📏</span>
+                <span className="stat-value">{formatDuration(genSummary.avgOutageMs, lang)}</span>
+                <span className="stat-label">{t('genAvgRun')}</span>
+              </div>
+              <div className="stat-card">
+                <span className="stat-icon">🧭</span>
+                <span className="stat-value">{fmtPercent(genSummary.occupancyPct, lang)}</span>
+                <span className="stat-label">{t('genOnPercent')}</span>
+              </div>
+            </>
+          )}
+        </div>
+
+        <PeriodChart
+          report={genReport}
+          themeKey={`${theme}-gen`}
+          title={t('genOnPercent')}
+          tooltipLabel={t('genOnPercent')}
+          metricLabel={t('chartMinutesRunning')}
+          emptyMsg={t('chartNoRun')}
+        />
       </section>
 
       <section className="card">

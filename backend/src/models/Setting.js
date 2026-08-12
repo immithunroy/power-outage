@@ -6,6 +6,8 @@ const settingSchema = new mongoose.Schema(
   {
     _id: { type: String, default: 'app' },
     target: { type: String, default: config.DEFAULT_TARGET, trim: true },
+    generatorTarget: { type: String, default: '', trim: true },
+    ipsTarget: { type: String, default: '', trim: true },
     method: { type: String, enum: ['ping', 'tcp'], default: 'ping' },
     port: { type: Number, default: 443 },
     intervalMs: { type: Number, default: config.DEFAULT_INTERVAL_MS, min: 5000 },
@@ -36,6 +38,8 @@ async function getPublicSettings() {
   const s = await getSettings();
   return {
     target: s.target,
+    generatorTarget: s.generatorTarget,
+    ipsTarget: s.ipsTarget,
     method: s.method,
     port: s.port,
     intervalMs: s.intervalMs,
@@ -47,10 +51,13 @@ async function getPublicSettings() {
 }
 
 async function updateSettings(fields) {
-  const allowed = ['target', 'method', 'port', 'intervalMs', 'timeoutMs', 'confirmDown', 'confirmUp'];
+  const allowed = ['target', 'generatorTarget', 'ipsTarget', 'method', 'port', 'intervalMs', 'timeoutMs', 'confirmDown', 'confirmUp'];
   const set = {};
   for (const key of allowed) {
     if (fields[key] !== undefined) set[key] = fields[key];
+  }
+  for (const t of ['target', 'generatorTarget', 'ipsTarget']) {
+    if (set[t] !== undefined) set[t] = String(set[t]).trim();
   }
   if (set.intervalMs !== undefined) set.intervalMs = Math.max(5000, Number(set.intervalMs) || 30000);
   if (set.timeoutMs !== undefined) set.timeoutMs = Math.max(1000, Number(set.timeoutMs) || 5000);

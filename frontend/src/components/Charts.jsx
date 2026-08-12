@@ -20,9 +20,13 @@ export function cssVar(name) {
   }
 }
 
-export function PeriodChart({ report, themeKey }) {
+export function PeriodChart({ report, themeKey, title, tooltipLabel, metricLabel, emptyMsg }) {
   const { t, lang, digits: D } = useApp();
   const isHourly = report && report.period === 'day';
+  const headerText = title || t('chartLabel');
+  const tipText = tooltipLabel || t('tooltipOutage');
+  const legendText = metricLabel || t('chartMinutesDown');
+  const emptyText = emptyMsg || t('chartAllUp');
 
   const data = useMemo(() => {
     if (!report) return [];
@@ -59,7 +63,7 @@ export function PeriodChart({ report, themeKey }) {
         <div className="tt-title">{b.label}</div>
         <div className="tt-row">
           <span className="tt-dot" style={{ background: downColor }} />
-          {t('tooltipOutage')}: <strong>{b.minutes} min</strong>
+          {tipText}: <strong>{b.minutes} min</strong>
         </div>
         <div className="tt-row">
           <span className="tt-dot" style={{ background: countColor }} />
@@ -71,9 +75,9 @@ export function PeriodChart({ report, themeKey }) {
 
   return (
     <div className="chart-wrap" key={themeKey}>
-      <h3 className="section-title">{t('chartLabel')}</h3>
+      <h3 className="section-title">{headerText}</h3>
       {data.length === 0 || data.every((b) => b.outageMs === 0) ? (
-        <div className="chart-all-up">{t('chartAllUp')}</div>
+        <div className="chart-all-up">{emptyText}</div>
       ) : (
         <ResponsiveContainer width="100%" height={260}>
           <ComposedChart data={data} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
@@ -107,7 +111,7 @@ export function PeriodChart({ report, themeKey }) {
       )}
       <div className="chart-legend">
         <span className="legend-item">
-          <span className="legend-swatch" style={{ background: downColor }} /> minutes down
+          <span className="legend-swatch" style={{ background: downColor }} /> {legendText}
         </span>
         <span className="legend-item">
           <span className="legend-swatch" style={{ background: countColor }} /> {t('outageCount')}

@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 
 const pingSchema = new mongoose.Schema(
   {
+    host: { type: String, enum: ['grid', 'generator', 'ips'], default: 'grid' },
     ts: { type: Date, required: true },
     up: { type: Boolean, required: true },
     latency: { type: Number, default: null },
@@ -9,7 +10,6 @@ const pingSchema = new mongoose.Schema(
   { versionKey: false }
 );
 
-pingSchema.index({ ts: 1 }, { expireAfterSeconds: 3 * 86400 });
-pingSchema.index({ ts: 1, up: 1 });
+pingSchema.index({ host: 1, ts: 1 }, { expireAfterSeconds: 3 * 86400 });
 
 module.exports = mongoose.model('Ping', pingSchema);

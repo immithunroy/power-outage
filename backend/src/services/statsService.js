@@ -21,13 +21,15 @@ function overlapMs(o, from, to) {
   return Math.min(end, to) - Math.max(start, from);
 }
 
-async function buildReport(period, endTime) {
+async function buildReport(period, endTime, kind = 'grid') {
   const cfg = PERIODS[period] || PERIODS.day;
   const end = endTime ? new Date(endTime).getTime() : Date.now();
 
   const windowStart = end - cfg.n * cfg.bucketMs;
+  const kindQuery = kind === 'generator' ? { kind: 'generator' } : { kind: { $in: ['grid', null] } };
 
   const outages = await Outage.find({
+    ...kindQuery,
     startedAt: { $lt: new Date(end) },
     $or: [{ endedAt: null }, { endedAt: { $gt: new Date(windowStart) } }],
   }).lean();
@@ -62,6 +64,7 @@ async function buildReport(period, endTime) {
 
   return {
     period,
+    kind,
     end: new Date(end),
     windowStart: new Date(windowStart),
     windowMs: totalTimeMs,
@@ -71,6 +74,7 @@ async function buildReport(period, endTime) {
       totalOutageMs,
       ongoing: Boolean(ongoing && ongoing.startedAt.getTime() < end),
       availability: round(availability, 2),
+      occupancyPct: totalTimeMs > 0 ? round(Math.min(100, (totalOutageMs / totalTimeMs) * 100), 2) : 0,
       avgOutageMs: count > 0 ? Math.round(totalOutageMs / count) : 0,
       longestOutageMs: Math.round(maxOverlap),
       totalTimeMs,

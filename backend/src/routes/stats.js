@@ -9,7 +9,8 @@ const router = express.Router();
 router.get('/stats', async (req, res) => {
   try {
     const period = VALID.includes(req.query.period) ? req.query.period : 'day';
-    const report = await buildReport(period, req.query.end);
+    const kind = req.query.kind === 'generator' ? 'generator' : 'grid';
+    const report = await buildReport(period, req.query.end, kind);
     res.json(report);
   } catch (e) {
     res.status(500).json({ error: e.message });
@@ -20,9 +21,15 @@ router.get('/timeline', async (req, res) => {
   try {
     const hours = Math.min(72, Math.max(1, Number(req.query.hours) || 24));
     const stepMs = Math.min(5, Math.max(1, Number(req.query.stepMinutes) || 1)) * 60 * 1000;
+    const host = req.query.host === 'generator' ? 'generator' : 'grid';
     const from = new Date(Date.now() - hours * 3600 * 1000);
 
-    const pings = await Ping.find({ ts: { $gte: from } }).select('ts up latency').lean();
+    const pings = await Ping.find({
+      ts: { $gte: from },
+      host: host === 'generator' ? 'generator' : { $in: ['grid', null] },
+    })
+      .select('ts up latency')
+      .lean();
 
     const buckets = new Map();
     for (const p of pings) {
@@ -50,7 +57,7 @@ router.get('/timeline', async (req, res) => {
         };
       });
 
-    res.json({ hours, stepMs, points, generatedAt: new Date() });
+    res.json({ hours, stepMs, host, points, generatedAt: new Date() });
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
@@ -59,8 +66,10 @@ router.get('/timeline', async (req, res) => {
 router.get('/history', async (req, res) => {
   try {
     const limit = Math.min(200, Math.max(1, Number(req.query.limit) || 20));
-    const outages = await Outage.find().sort({ startedAt: -1 }).limit(limit).lean();
-    res.json({ outages });
+    const kind = req.query.kind === 'generator' ? 'generator' : req.query.kind === 'all' ? null : 'grid';
+    const q = kind === null ? {} : kind === 'generator' ? { kind: 'generator' } : { kind: { $in: ['grid', null] } };
+    const outages = await Outage.find(q).sort({ startedAt: -1 }).limit(limit).lean();
+    res.json({ outages, kind: kind === null ? 'all' : kind });
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
@@ -70,9 +79,11 @@ router.get('/history/export', requireAuth, async (_req, res) => {
   try {
     const outages = await Outage.find().sort({ startedAt: 1 }).lean();
     const esc = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`;
-    const lines = ['"startedAt","endedAt","durationMs"'];
+    const lines = ['"kind","startedAt","endedAt","durationMs"'];
     for (const o of outages) {
-      lines.push(`${esc(o.startedAt.toISOString())},${esc(o.endedAt ? o.endedAt.toISOString() : '')},${esc(o.durationMs ?? '')}`);
+      lines.push(
+        `${esc(o.kind || 'grid')},${esc(o.startedAt.toISOString())},${esc(o.endedAt ? o.endedAt.toISOString() : '')},${esc(o.durationMs ?? '')}`
+      );
     }
     res.setHeader('Content-Type', 'text/csv; charset=utf-8');
     res.setHeader('Content-Disposition', 'attachment; filename="outages.csv"');

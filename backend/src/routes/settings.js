@@ -23,6 +23,8 @@ router.post('/settings', async (req, res) => {
     const body = req.body || {};
     const sanitized = {};
     if (body.target !== undefined) sanitized.target = String(body.target).trim();
+    if (body.generatorTarget !== undefined) sanitized.generatorTarget = String(body.generatorTarget).trim();
+    if (body.ipsTarget !== undefined) sanitized.ipsTarget = String(body.ipsTarget).trim();
     if (body.method !== undefined) sanitized.method = body.method === 'tcp' ? 'tcp' : 'ping';
     if (body.port !== undefined) sanitized.port = Math.min(65535, Math.max(1, Number(body.port) || 443));
     if (body.intervalMs !== undefined) sanitized.intervalMs = Number(body.intervalMs);
@@ -31,7 +33,7 @@ router.post('/settings', async (req, res) => {
     if (body.confirmUp !== undefined) sanitized.confirmUp = Number(body.confirmUp);
 
     if ('target' in sanitized && !sanitized.target) {
-      return res.status(400).json({ error: 'target is required' });
+      return res.status(400).json({ error: 'grid host is required' });
     }
 
     const updated = await updateSettings(sanitized);
