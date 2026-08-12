@@ -729,19 +729,26 @@ body {
   transform-origin: bottom;
 }
 .timeline-axis {
-  display: flex;
-  gap: 1px;
+  position: relative;
+  height: 18px;
   margin-top: 6px;
   padding: 0 4px;
 }
-.tl-axis-seg {
-  flex: 1 1 0;
-  min-width: 1px;
-  font-size: 10px;
-  color: var(--muted);
-  text-align: left;
+.tl-axis-label {
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text);
   white-space: nowrap;
-  overflow: hidden;
+}
+.tl-axis-first {
+  transform: none;
+  text-align: left;
+}
+.tl-axis-last {
+  transform: translateX(-100%);
 }
 .timeline-legend {
   margin-top: 10px;

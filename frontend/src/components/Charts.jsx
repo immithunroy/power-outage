@@ -10,7 +10,7 @@ import {
   CartesianGrid,
 } from 'recharts';
 import { useApp } from '../context/AppContext';
-import { fmtTime, fmtDate } from '../utils';
+import { fmtTime, fmtDate, cn } from '../utils';
 
 export function cssVar(name) {
   try {
@@ -133,7 +133,19 @@ export function TimelineChart({ points, themeKey, title, upLabel, downLabel }) {
   const headerText = title || t('timelineTitle');
   const upText = upLabel || t('gridAvailable');
   const downText = downLabel || t('loadShedding');
-  const axisStep = Math.max(1, Math.floor(points.length / 8));
+
+  const labelCount = 7;
+  const axisLabels = [];
+  for (let i = 0; i < labelCount; i++) {
+    const idx = Math.min(
+      points.length - 1,
+      Math.round((i / (labelCount - 1)) * (points.length - 1))
+    );
+    axisLabels.push({
+      pos: (i / (labelCount - 1)) * 100,
+      label: fmtTime(points[idx].t, lang, { hour12: true }),
+    });
+  }
 
   return (
     <div className="chart-wrap" key={themeKey}>
@@ -143,14 +155,22 @@ export function TimelineChart({ points, themeKey, title, upLabel, downLabel }) {
           const ratio = p.downRatio || 0;
           const colorRatio =
             ratio <= 0 ? upColor : ratio >= 1 ? downColor : `rgba(239,68,68,${0.4 + ratio * 0.6})`;
-          const tip = `${fmtTime(p.t, lang)} — ${D(Math.round(ratio * 100))}%`;
+          const tip = `${fmtTime(p.t, lang, { hour12: true })} — ${D(Math.round(ratio * 100))}%`;
           return <div key={i} className="tl-seg" style={{ background: colorRatio }} title={tip} />;
         })}
       </div>
       <div className="timeline-axis" aria-hidden="true">
-        {points.map((p, i) => (
-          <span key={i} className="tl-axis-seg">
-            {i % axisStep === 0 ? fmtTime(p.t, lang) : ''}
+        {axisLabels.map((l, i) => (
+          <span
+            key={i}
+            className={cn(
+              'tl-axis-label',
+              i === 0 && 'tl-axis-first',
+              i === axisLabels.length - 1 && 'tl-axis-last'
+            )}
+            style={{ left: `${l.pos}%` }}
+          >
+            {l.label}
           </span>
         ))}
       </div>
