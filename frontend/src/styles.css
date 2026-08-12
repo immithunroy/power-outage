@@ -728,6 +728,21 @@ body {
   transform: scaleY(1.15);
   transform-origin: bottom;
 }
+.timeline-axis {
+  display: flex;
+  gap: 1px;
+  margin-top: 6px;
+  padding: 0 4px;
+}
+.tl-axis-seg {
+  flex: 1 1 0;
+  min-width: 1px;
+  font-size: 10px;
+  color: var(--muted);
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+}
 .timeline-legend {
   margin-top: 10px;
 }

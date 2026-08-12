@@ -23,10 +23,43 @@ router.get('/timeline', async (req, res) => {
     const stepMs = Math.min(5, Math.max(1, Number(req.query.stepMinutes) || 1)) * 60 * 1000;
     const host = req.query.host === 'generator' ? 'generator' : 'grid';
     const from = new Date(Date.now() - hours * 3600 * 1000);
+    const to = new Date();
+
+    if (host === 'generator') {
+      const events = await Outage.find({
+        kind: 'generator',
+        startedAt: { $lt: to },
+        $or: [{ endedAt: null }, { endedAt: { $gt: from } }],
+      })
+        .select('startedAt endedAt')
+        .lean();
+      const points = [];
+      for (let t = from.getTime(); t < to.getTime(); t += stepMs) {
+        const bFrom = t;
+        const bTo = Math.min(to.getTime(), t + stepMs);
+        let runMs = 0;
+        for (const e of events) {
+          const s = Math.max(e.startedAt.getTime(), bFrom);
+          const en = e.endedAt ? Math.min(e.endedAt.getTime(), bTo) : bTo;
+          const ov = en - s;
+          if (ov > 0) runMs += ov;
+        }
+        const span = bTo - bFrom;
+        points.push({
+          t: new Date(bFrom),
+          downRatio: span > 0 ? runMs / span : 0,
+          upCount: span > 0 ? Math.round((span - runMs) / 1000) : 0,
+          downCount: Math.round(runMs / 1000),
+          avgLatency: null,
+        });
+      }
+      res.json({ hours, stepMs, host, points, generatedAt: new Date() });
+      return;
+    }
 
     const pings = await Ping.find({
       ts: { $gte: from },
-      host: host === 'generator' ? 'generator' : { $in: ['grid', null] },
+      host: { $in: ['grid', null] },
     })
       .select('ts up latency')
       .lean();

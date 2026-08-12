@@ -121,7 +121,7 @@ export function PeriodChart({ report, themeKey, title, tooltipLabel, metricLabel
   );
 }
 
-export function TimelineChart({ points, themeKey }) {
+export function TimelineChart({ points, themeKey, title, upLabel, downLabel }) {
   const { t, lang, digits: D } = useApp();
 
   if (!points || !points.length) {
@@ -130,10 +130,14 @@ export function TimelineChart({ points, themeKey }) {
 
   const upColor = cssVar('--success') || '#22c55e';
   const downColor = cssVar('--danger') || '#ef4444';
+  const headerText = title || t('timelineTitle');
+  const upText = upLabel || t('gridAvailable');
+  const downText = downLabel || t('loadShedding');
+  const axisStep = Math.max(1, Math.floor(points.length / 8));
 
   return (
     <div className="chart-wrap" key={themeKey}>
-      <h3 className="section-title">{t('timelineTitle')}</h3>
+      <h3 className="section-title">{headerText}</h3>
       <div className="timeline-bars" role="img">
         {points.map((p, i) => {
           const ratio = p.downRatio || 0;
@@ -143,12 +147,19 @@ export function TimelineChart({ points, themeKey }) {
           return <div key={i} className="tl-seg" style={{ background: colorRatio }} title={tip} />;
         })}
       </div>
+      <div className="timeline-axis" aria-hidden="true">
+        {points.map((p, i) => (
+          <span key={i} className="tl-axis-seg">
+            {i % axisStep === 0 ? fmtTime(p.t, lang) : ''}
+          </span>
+        ))}
+      </div>
       <div className="chart-legend timeline-legend">
         <span className="legend-item">
-          <span className="legend-swatch" style={{ background: upColor }} /> {t('gridAvailable')}
+          <span className="legend-swatch" style={{ background: upColor }} /> {upText}
         </span>
         <span className="legend-item">
-          <span className="legend-swatch" style={{ background: downColor }} /> {t('loadShedding')}
+          <span className="legend-swatch" style={{ background: downColor }} /> {downText}
         </span>
       </div>
     </div>

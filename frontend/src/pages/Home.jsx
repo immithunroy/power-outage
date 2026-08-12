@@ -24,6 +24,7 @@ export default function Home() {
   const [report, setReport] = useState(null);
   const [genReport, setGenReport] = useState(null);
   const [points, setPoints] = useState(null);
+  const [genPoints, setGenPoints] = useState(null);
   const [outages, setOutages] = useState([]);
   const [period, setPeriod] = useState('day');
   const [genPeriod, setGenPeriod] = useState('day');
@@ -86,6 +87,12 @@ export default function Home() {
       try {
         const tl = await api.timeline('grid');
         setPoints(downsample(tl.points, 288));
+      } catch {
+        /* ignore */
+      }
+      try {
+        const gt = await api.timeline('generator');
+        setGenPoints(downsample(gt.points, 288));
       } catch {
         /* ignore */
       }
@@ -172,6 +179,10 @@ export default function Home() {
         <PeriodChart report={report} themeKey={theme} />
       </section>
 
+      <section className="card">
+        <TimelineChart points={points} themeKey={theme} />
+      </section>
+
       <section className="card reports">
         <div className="reports-head">
           <div className="reports-title">
@@ -237,7 +248,13 @@ export default function Home() {
       </section>
 
       <section className="card">
-        <TimelineChart points={points} themeKey={theme} />
+        <TimelineChart
+          points={genPoints}
+          themeKey={`${theme}-gen-tl`}
+          title={t('genTimelineTitle')}
+          upLabel={t('genOff')}
+          downLabel={t('genRunning')}
+        />
       </section>
 
       <section className="card">

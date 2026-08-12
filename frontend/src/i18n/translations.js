@@ -30,8 +30,8 @@ export const translations = {
     periodMonth: 'Month',
     periodQuarter: 'Quarter',
     periodAll: 'All time',
-    reportsTitle: 'Outage Report',
-    reportsSub: 'Every outage is recorded automatically. Pick a period.',
+    reportsTitle: 'Grid Outage Report',
+    reportsSub: 'Every grid outage is recorded automatically. Pick a period.',
 
     outageCount: 'Outages',
     totalDownTime: 'Total outage time',
@@ -68,8 +68,11 @@ export const translations = {
 
     chartLabel: 'Outage time per bucket',
     chartAllUp: 'No recorded downtime in this period 🎉',
-    timelineTitle: 'Last 24 hours',
+    timelineTitle: 'Grid · Last 24 hours',
     timelineHint: '■ = down   ■ = up',
+    genTimelineTitle: 'Generator · Last 24 hours',
+    genRunning: 'Generator running',
+    genOff: 'Generator off',
     tooltipOutage: 'Down time',
 
     recentOutages: 'Recent Outage Events',
@@ -161,8 +164,8 @@ export const translations = {
     periodMonth: 'মাস',
     periodQuarter: 'ত্রৈমাসিক',
     periodAll: 'সব সময়',
-    reportsTitle: 'লোডশেডিং রিপোর্ট',
-    reportsSub: 'প্রতিটি লোডশেডিং স্বয়ংক্রিয়ভাবে রেকর্ড হয়। সময়কাল বেছে নিন।',
+    reportsTitle: 'গ্রিড আউটেজ রিপোর্ট',
+    reportsSub: 'প্রতিটি গ্রিড আউটেজ স্বয়ংক্রিয়ভাবে রেকর্ড হয়। সময়কাল বেছে নিন।',
 
     outageCount: 'লোডশেডিং সংখ্যা',
     totalDownTime: 'মোট বন্ধের সময়',
@@ -199,8 +202,11 @@ export const translations = {
 
     chartLabel: 'প্রতি অংশে বন্ধের সময়',
     chartAllUp: 'এই সময়ে কোনো বন্ধ রেকর্ড হয়নি 🎉',
-    timelineTitle: 'গত ২৪ ঘণ্টা',
+    timelineTitle: 'গ্রিড · গত ২৪ ঘণ্টা',
     timelineHint: '■ = বন্ধ   ■ = চালু',
+    genTimelineTitle: 'জেনারেটর · গত ২৪ ঘণ্টা',
+    genRunning: 'জেনারেটর চলছে',
+    genOff: 'জেনারেটর বন্ধ',
     tooltipOutage: 'বন্ধের সময়',
 
     recentOutages: 'সাম্প্রতিক লোডশেডিং',
