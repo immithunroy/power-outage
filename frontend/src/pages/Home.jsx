@@ -10,6 +10,8 @@ import { fmtDate, fmtPercent, formatDuration, downsample, cn } from '../utils';
 const PERIODS = ['day', 'week', 'month', 'quarter', 'all'];
 
 const CARD_META = {
+  outageCount: { icon: '⏱️' },
+  totalDownTime: { icon: '⏳', highlight: true },
   availability: { icon: '📶' },
   longestOutage: { icon: '🛑' },
   avgOutage: { icon: '📏' },
