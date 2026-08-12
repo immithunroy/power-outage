@@ -142,15 +142,14 @@ export default function StatusHero({ status, now }) {
             <h1 className="hero-title">{t('initializing')}</h1>
             <p className="hero-msg">{t('tagline')}</p>
           </>
-        ) : up ? (
-          <>
-            <h1 className="hero-title">✓ {t('gridAvailable')}</h1>
-            <p className="hero-msg">{t('gridAvailableMsg')}</p>
-          </>
         ) : (
           <>
-            <h1 className="hero-title">⚠ {t('loadShedding')}</h1>
-            <p className="hero-msg">{t('loadSheddingMsg')}</p>
+            <h1 className="hero-title">
+              {up ? t('gridOnTitle') : status?.generator?.on === true ? t('genRunTitle') : t('gridOffTitle')}
+            </h1>
+            <p className="hero-msg">
+              {up ? t('gridOnMsg') : status?.generator?.on === true ? t('genRunMsg') : t('gridOffMsg')}
+            </p>
           </>
         )}
 
@@ -178,14 +177,11 @@ export default function StatusHero({ status, now }) {
             <span className="hp-name">⚙️ {t('generatorName')}</span>
             <span className="hp-state">
               {status?.generator?.on === true
-                ? t('genRunning')
+                ? t('statusOn')
                 : status?.generator?.on === false
-                  ? t('genOff')
+                  ? t('statusOff')
                   : t('statusUnknown')}
             </span>
-            {status?.generator?.latency != null && (
-              <span className="hp-lat">{digits(status.generator.latency)}ms</span>
-            )}
           </div>
           <div
             className={cn('hp-item', status?.ips?.up === true ? 'hp-on' : status?.ips?.up === false ? 'hp-off' : 'hp-na')}
@@ -198,7 +194,6 @@ export default function StatusHero({ status, now }) {
                   ? t('statusOff')
                   : t('statusUnknown')}
             </span>
-            {status?.ips?.latency != null && <span className="hp-lat">{digits(status.ips.latency)}ms</span>}
           </div>
         </div>
       </div>
