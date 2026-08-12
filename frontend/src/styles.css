@@ -331,6 +331,62 @@ body {
   gap: 22px;
   margin-top: 20px;
 }
+.hero-power {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 16px;
+}
+.hp-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--card-2);
+  font-size: 12.5px;
+  font-weight: 600;
+}
+.hp-name {
+  color: var(--text);
+  font-weight: 700;
+}
+.hp-state {
+  font-weight: 800;
+}
+.hp-lat {
+  color: var(--muted);
+  font-weight: 600;
+  font-size: 11.5px;
+}
+.hp-on {
+  border-color: color-mix(in srgb, var(--success) 45%, var(--border));
+  background: var(--success-soft);
+}
+.hp-on .hp-state {
+  color: var(--success);
+}
+.hp-off {
+  border-color: color-mix(in srgb, var(--danger) 50%, var(--border));
+  background: var(--danger-soft);
+}
+.hp-off .hp-state {
+  color: var(--danger);
+}
+.hp-idle {
+  border-color: color-mix(in srgb, var(--warn) 50%, var(--border));
+  background: var(--warn-soft);
+}
+.hp-idle .hp-state {
+  color: var(--warn);
+}
+.hp-na {
+  opacity: 0.75;
+}
+.hp-na .hp-state {
+  color: var(--muted);
+}
 .hero-meta-item {
   display: flex;
   flex-direction: column;

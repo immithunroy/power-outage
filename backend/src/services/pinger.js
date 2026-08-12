@@ -216,7 +216,7 @@ async function tick() {
     const ipsUp = results.ips.up;
     const genCondition = gridUp === null || genUp === null ? null : gridUp === false && genUp === true;
 
-    await applyCondition('grid', gridUp, settings, startGrid, endGrid);
+    await applyCondition('grid', gridUp, settings, endGrid, startGrid);
     await applyCondition('generator', genCondition, settings, startGenerator, endGenerator);
     await applyCondition('ips', ipsUp, settings, null, null);
   } catch (e) {

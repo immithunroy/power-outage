@@ -129,9 +129,6 @@ export default function StatusHero({ status, now }) {
   const currentOutage = status?.currentOutage || null;
   const elapsed = currentOutage ? Math.max(0, now - new Date(currentOutage.startedAt).getTime()) : 0;
 
-  const isTcp = status?.method === 'tcp';
-  const methodLabel = isTcp ? `${t('methodTcp')} :${digits(status?.port ?? 443)}` : t('methodPing');
-
   return (
     <section className={cn('hero card', cls)}>
       <div className="hero-status">
@@ -169,8 +166,40 @@ export default function StatusHero({ status, now }) {
 
         <div className="hero-meta">
           <Meta label={t('lastChecked')} value={relative(status?.lastChecked, now, t, digits)} />
-          <Meta label={t('target')} value={status?.target || '—'} />
-          <Meta label={t('method')} value={methodLabel} />
+        </div>
+
+        <div className="hero-power">
+          <div
+            className={cn(
+              'hp-item',
+              status?.generator?.on === true ? 'hp-on' : status?.generator?.on === false ? 'hp-idle' : 'hp-na'
+            )}
+          >
+            <span className="hp-name">⚙️ {t('generatorName')}</span>
+            <span className="hp-state">
+              {status?.generator?.on === true
+                ? t('genRunning')
+                : status?.generator?.on === false
+                  ? t('genOff')
+                  : t('statusUnknown')}
+            </span>
+            {status?.generator?.latency != null && (
+              <span className="hp-lat">{digits(status.generator.latency)}ms</span>
+            )}
+          </div>
+          <div
+            className={cn('hp-item', status?.ips?.up === true ? 'hp-on' : status?.ips?.up === false ? 'hp-off' : 'hp-na')}
+          >
+            <span className="hp-name">🔌 {t('ipsName')}</span>
+            <span className="hp-state">
+              {status?.ips?.up === true
+                ? t('statusOn')
+                : status?.ips?.up === false
+                  ? t('statusOff')
+                  : t('statusUnknown')}
+            </span>
+            {status?.ips?.latency != null && <span className="hp-lat">{digits(status.ips.latency)}ms</span>}
+          </div>
         </div>
       </div>
 
