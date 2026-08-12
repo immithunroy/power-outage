@@ -51,13 +51,25 @@ export function elapsedClock(ms, lang) {
 
 const LOCALES = { en: 'en-GB', bn: 'bn-BD' };
 
+function toAMPM(s) {
+  return String(s).replace(/\b(am|pm)\b/gi, (m) => m.toUpperCase());
+}
+
 export function fmtDateTime(ts, lang, opts = {}) {
   const d = new Date(ts);
   if (!Number.isFinite(d.getTime())) return '—';
   const l = LOCALES[lang] || LOCALES.en;
-  const base = { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', ...opts };
+  const base = {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: true,
+    ...opts,
+  };
   try {
-    return new Intl.DateTimeFormat(l, base).format(d);
+    return toAMPM(new Intl.DateTimeFormat(l, base).format(d));
   } catch {
     return d.toLocaleString();
   }
@@ -79,9 +91,9 @@ export function fmtTime(ts, lang, opts = {}) {
   const d = new Date(ts);
   if (!Number.isFinite(d.getTime())) return '—';
   const l = LOCALES[lang] || LOCALES.en;
-  const base = { hour: '2-digit', minute: '2-digit', ...opts };
+  const base = { hour: '2-digit', minute: '2-digit', hour12: true, ...opts };
   try {
-    return new Intl.DateTimeFormat(l, base).format(d);
+    return toAMPM(new Intl.DateTimeFormat(l, base).format(d));
   } catch {
     return d.toLocaleTimeString();
   }
