@@ -40,9 +40,13 @@ export default function OutageTable({ outages, limit }) {
                       {o.generatorMs ? formatDuration(o.generatorMs, lang) : t('notConsumed')}
                     </td>
                     <td data-label={t('statusCol')}>
-                      <span className={cn('status-chip', ongoing ? 'chip-down' : 'chip-up')}>
-                        {ongoing ? t('ongoingBadge') : t('recovered')}
-                      </span>
+                      {o.orphan ? (
+                        <span className="status-chip chip-gen">{t('genRunEvent')}</span>
+                      ) : (
+                        <span className={cn('status-chip', ongoing ? 'chip-down' : 'chip-up')}>
+                          {ongoing ? t('ongoingBadge') : t('recovered')}
+                        </span>
+                      )}
                     </td>
                   </tr>
                 );

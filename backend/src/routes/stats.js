@@ -100,11 +100,24 @@ router.get('/history', async (req, res) => {
   try {
     const limit = Math.min(200, Math.max(1, Number(req.query.limit) || 20));
     const kind = req.query.kind === 'generator' ? 'generator' : req.query.kind === 'all' ? null : 'grid';
-    const q = kind === null ? {} : kind === 'generator' ? { kind: 'generator' } : { kind: { $in: ['grid', null] } };
-    const outages = await Outage.find(q).sort({ startedAt: -1 }).limit(limit).lean();
+    const period = req.query.period || 'all';
+    const now = Date.now();
+    const W =
+      period === 'day' ? 86400000 : period === 'week' ? 7 * 86400000 : period === 'month' ? 30 * 86400000 : period === 'quarter' ? 91 * 86400000 : null;
+    const windowStart = W ? new Date(now - W) : null;
+    const range = windowStart
+      ? { startedAt: { $lt: new Date(now) }, $or: [{ endedAt: null }, { endedAt: { $gt: windowStart } }] }
+      : {};
+    const base = kind === null ? {} : kind === 'generator' ? { kind: 'generator' } : { kind: { $in: ['grid', null] } };
+
+    const outages = await Outage.find({ ...base, ...range }).sort({ startedAt: -1 }).limit(limit).lean();
+
     if (kind !== 'generator') {
       const genEvents = await Outage.find({ kind: 'generator' }).select('startedAt endedAt').lean();
-      const now = Date.now();
+      const gridAll = await Outage.find({ kind: { $in: ['grid', null] }, ...range })
+        .select('startedAt endedAt')
+        .lean();
+
       for (const o of outages) {
         const oStart = o.startedAt.getTime();
         const oEnd = o.endedAt ? o.endedAt.getTime() : now;
@@ -118,8 +131,42 @@ router.get('/history', async (req, res) => {
         }
         o.generatorMs = genMs;
       }
+
+      const overlapsAnyGrid = (gs, ge) =>
+        gridAll.some((o) => {
+          const oStart = o.startedAt.getTime();
+          const oEnd = o.endedAt ? o.endedAt.getTime() : now;
+          return Math.min(ge, oEnd) - Math.max(gs, oStart) > 0;
+        });
+
+      const orphans = [];
+      for (const g of genEvents) {
+        const gs = g.startedAt.getTime();
+        const ge = g.endedAt ? g.endedAt.getTime() : now;
+        if (gs > now) continue;
+        if (windowStart && ge < windowStart.getTime()) continue;
+        if (overlapsAnyGrid(gs, ge)) continue;
+        const s = windowStart ? Math.max(gs, windowStart.getTime()) : gs;
+        const e = Math.min(ge, now);
+        if (e <= s) continue;
+        orphans.push({
+          _id: g._id,
+          startedAt: new Date(s),
+          endedAt: new Date(e),
+          durationMs: e - s,
+          generatorMs: e - s,
+          kind: 'generator-run',
+          orphan: true,
+        });
+      }
+      if (orphans.length) {
+        outages.push(...orphans);
+        outages.sort((a, b) => b.startedAt - a.startedAt);
+        if (outages.length > limit) outages.length = limit;
+      }
     }
-    res.json({ outages, kind: kind === null ? 'all' : kind });
+
+    res.json({ outages, kind: kind === null ? 'all' : kind, period });
   } catch (e) {
     res.status(500).json({ error: e.message });
   }

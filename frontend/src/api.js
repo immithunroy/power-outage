@@ -35,8 +35,8 @@ export const api = {
   status: () => request('/status'),
   stats: (period, kind) => request(`/stats?period=${period}${kind ? `&kind=${kind}` : ''}`),
   timeline: (host) => request(`/timeline?hours=24&stepMinutes=1${host ? `&host=${host}` : ''}`),
-  history: (limit = 15, kind) =>
-    request(`/history?limit=${limit}${kind ? `&kind=${kind}` : ''}`),
+  history: (limit = 15, kind, period) =>
+    request(`/history?limit=${limit}${kind ? `&kind=${kind}` : ''}${period && period !== 'all' ? `&period=${period}` : ''}`),
   login: (password) => request('/auth/login', { method: 'POST', body: JSON.stringify({ password }) }),
 
   getSettings: () => request('/settings'),

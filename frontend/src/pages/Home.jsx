@@ -28,6 +28,7 @@ export default function Home() {
   const [outages, setOutages] = useState([]);
   const [period, setPeriod] = useState('day');
   const [genPeriod, setGenPeriod] = useState('day');
+  const [histPeriod, setHistPeriod] = useState('all');
   const [toast, setToast] = useState(null);
   const toastRef = useRef(0);
 
@@ -96,17 +97,24 @@ export default function Home() {
       } catch {
         /* ignore */
       }
-      try {
-        const hs = await api.history(15);
-        setOutages(hs.outages || []);
-      } catch {
-        /* ignore */
-      }
     };
     load();
     const id = setInterval(load, 60000);
     return () => clearInterval(id);
   }, []);
+
+  useEffect(() => {
+    let alive = true;
+    api
+      .history(15, undefined, histPeriod)
+      .then((hs) => {
+        if (alive) setOutages(hs.outages || []);
+      })
+      .catch(() => {});
+    return () => {
+      alive = false;
+    };
+  }, [histPeriod]);
 
   const summary = report?.summary || null;
   const genSummary = genReport?.summary || null;
@@ -257,7 +265,27 @@ export default function Home() {
         />
       </section>
 
-      <section className="card">
+      <section className="card reports">
+        <div className="reports-head">
+          <div className="reports-title">
+            <h2 className="section-title">{t('recentOutages')}</h2>
+            <p className="section-sub">{t('recentOutagesSub')}</p>
+          </div>
+          <div className="period-tabs" role="tablist">
+            {PERIODS.map((p) => (
+              <button
+                key={p}
+                type="button"
+                role="tab"
+                aria-selected={histPeriod === p}
+                className={cn('period-tab', histPeriod === p && 'active')}
+                onClick={() => setHistPeriod(p)}
+              >
+                {t(`period${p[0].toUpperCase()}${p.slice(1)}`)}
+              </button>
+            ))}
+          </div>
+        </div>
         <OutageTable outages={outages} limit={12} />
       </section>
 

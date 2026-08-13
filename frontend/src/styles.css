@@ -867,6 +867,10 @@ body {
   background: var(--danger-soft);
   color: var(--danger);
 }
+.chip-gen {
+  background: var(--warn-soft);
+  color: var(--warn);
+}
 .badge {
   display: inline-block;
   padding: 4px 10px;
