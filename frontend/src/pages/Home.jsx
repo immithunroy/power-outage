@@ -286,7 +286,7 @@ export default function Home() {
             ))}
           </div>
         </div>
-        <OutageTable outages={outages} limit={12} />
+        <OutageTable outages={outages} limit={12} showTitle={false} />
       </section>
 
       <footer className="footer">{t('footerNote')}</footer>

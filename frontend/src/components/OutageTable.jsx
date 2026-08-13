@@ -1,13 +1,13 @@
 import { useApp } from '../context/AppContext';
 import { fmtDateTime, formatDuration, cn } from '../utils';
 
-export default function OutageTable({ outages, limit }) {
+export default function OutageTable({ outages, limit, showTitle = true }) {
   const { t, lang } = useApp();
   const rows = outages ? outages.slice(0, limit || outages.length) : [];
 
   return (
     <div>
-      <h3 className="section-title">{t('recentOutages')}</h3>
+      {showTitle && <h3 className="section-title">{t('recentOutages')}</h3>}
       {!rows.length ? (
         <div className="no-outages">{t('noOutages')} 🎉</div>
       ) : (
