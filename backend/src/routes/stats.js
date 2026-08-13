@@ -102,6 +102,23 @@ router.get('/history', async (req, res) => {
     const kind = req.query.kind === 'generator' ? 'generator' : req.query.kind === 'all' ? null : 'grid';
     const q = kind === null ? {} : kind === 'generator' ? { kind: 'generator' } : { kind: { $in: ['grid', null] } };
     const outages = await Outage.find(q).sort({ startedAt: -1 }).limit(limit).lean();
+    if (kind !== 'generator') {
+      const genEvents = await Outage.find({ kind: 'generator' }).select('startedAt endedAt').lean();
+      const now = Date.now();
+      for (const o of outages) {
+        const oStart = o.startedAt.getTime();
+        const oEnd = o.endedAt ? o.endedAt.getTime() : now;
+        let genMs = 0;
+        for (const g of genEvents) {
+          const gs = g.startedAt.getTime();
+          const ge = g.endedAt ? g.endedAt.getTime() : now;
+          const s = Math.max(gs, oStart);
+          const e = Math.min(ge, oEnd);
+          if (e > s) genMs += e - s;
+        }
+        o.generatorMs = genMs;
+      }
+    }
     res.json({ outages, kind: kind === null ? 'all' : kind });
   } catch (e) {
     res.status(500).json({ error: e.message });

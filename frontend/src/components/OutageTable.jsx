@@ -18,6 +18,7 @@ export default function OutageTable({ outages, limit }) {
                 <th>{t('started')}</th>
                 <th>{t('ended')}</th>
                 <th>{t('duration')}</th>
+                <th>{t('generator')}</th>
                 <th>{t('statusCol')}</th>
               </tr>
             </thead>
@@ -34,6 +35,9 @@ export default function OutageTable({ outages, limit }) {
                       ) : (
                         formatDuration(o.durationMs, lang)
                       )}
+                    </td>
+                    <td data-label={t('generator')}>
+                      {o.generatorMs ? formatDuration(o.generatorMs, lang) : t('notConsumed')}
                     </td>
                     <td data-label={t('statusCol')}>
                       <span className={cn('status-chip', ongoing ? 'chip-down' : 'chip-up')}>
