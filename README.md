@@ -18,9 +18,12 @@ Admin panel:      `outage.qbinternet.com/admin`
   outage charts and a 24h up/down timeline.
 - **Auto-detection** — flexible target: ICMP ping **or** TCP connect (host + port),
   configurable interval and consecutive-fails threshold to avoid false alarms.
+- **Growatt inverter integration** — real-time solar, grid, load and battery
+  monitoring via Growatt Open API V1. Power flow visualization, battery SOC,
+  backup runtime estimation, energy history charts.
 - **Admin panel** (password protected) — change ping destination host/IP, method,
   port, interval, thresholds; test the probe; clear history; export CSV;
-  change admin password.
+  change admin password; configure Growatt integration.
 - **English / বাংলা language switcher** and **dark / light theme**.
 - **Responsive design** — works on phone, tablet and desktop.
 - Public JSON APIs so you can integrate with other tools.
@@ -81,6 +84,13 @@ hosted in the office) so it vanishes when grid power is cut.
 | `/api/settings/password`           | POST   | yes  | Change admin password                |
 | `/api/settings/clear-history`      | POST   | yes  | Delete all pings & outages           |
 | `/api/auth/login`                  | POST   | no   | Login → JWT                          |
+| `/api/growatt/status`              | GET    | no   | Real-time solar/grid/load/battery    |
+| `/api/growatt/energy?period=week`  | GET    | no   | Energy history (`day`/`week`/`month`) |
+| `/api/growatt/alarms`              | GET    | no   | Inverter faults and warnings         |
+| `/api/growatt/settings`            | GET    | yes  | Growatt integration settings         |
+| `/api/growatt/settings`            | POST   | yes  | Update Growatt settings              |
+| `/api/growatt/test`                | POST   | yes  | Test Growatt API connection          |
+| `/api/growatt/discover`            | POST   | yes  | Discover plants and devices          |
 
 ## Local Development
 
@@ -104,13 +114,13 @@ outage/
 ├─ backend/                    # Express API + pinger + stats engine
 │  └─ src/
 │     ├─ server.js
-│     ├─ models/               # Setting, Outage, Ping
-│     ├─ services/             # pinger, statsService
-│     └─ routes/               # auth, status, stats, settings
-└─ frontend/                   # React + Vite SPA (dashboard + admin)
+│     ├─ models/               # Setting, Outage, Ping, GrowattSetting
+│     ├─ services/             # pinger, statsService, growattService
+│     └─ routes/               # auth, status, stats, settings, growatt
+└─ frontend/                   # React + Vite SPA (dashboard + admin + power)
    └─ src/
-      ├─ pages/                # Home, Admin
-      ├─ components/           # Navbar, StatusHero, Charts, OutageTable, ...
+      ├─ pages/                # Home, Power, Admin
+      ├─ components/           # Navbar, StatusHero, Charts, PowerFlow, BatteryStatus, ...
       ├─ context/              # locale + theme
       └─ i18n/                 # en / bn translations
 ```

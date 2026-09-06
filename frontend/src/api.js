@@ -52,4 +52,19 @@ export const api = {
     if (!res.ok) throw new Error('export failed');
     return res.blob();
   },
+
+  growattStatus: () => request('/growatt/status'),
+  growattEnergy: (period = 'week') => request(`/growatt/energy?period=${period}`),
+  growattAlarms: () => request('/growatt/alarms'),
+  growattMeters: (datalogSn) => request(`/growatt/meters?datalog_sn=${datalogSn}`),
+  growattMeterData: (datalogSn, address) => request(`/growatt/meters/data?datalog_sn=${datalogSn}&address=${address}`),
+  growattDeviceDetails: (deviceSn, deviceType) => request(`/growatt/v4/details?deviceSn=${deviceSn}&deviceType=${deviceType}`),
+  growattPowerRealtime: (deviceSn, deviceType) => request(`/growatt/v4/power?deviceSn=${deviceSn}&deviceType=${deviceType}`),
+  growattDeviceInfo: (deviceSn, deviceType) => request(`/growatt/v4/device-info?deviceSn=${deviceSn}&deviceType=${deviceType}`),
+  growattWifiStrength: (deviceSn, deviceType) => request(`/growatt/v4/wifi?deviceSn=${deviceSn}&deviceType=${deviceType}`),
+  growattHistorical: (deviceSn, deviceType, date) => request(`/growatt/v4/historical?deviceSn=${deviceSn}&deviceType=${deviceType}&date=${date}`),
+  getGrowattSettings: () => request('/growatt/settings'),
+  updateGrowattSettings: (s) => request('/growatt/settings', { method: 'POST', body: JSON.stringify(s) }),
+  testGrowatt: () => request('/growatt/test', { method: 'POST' }),
+  discoverGrowatt: () => request('/growatt/discover', { method: 'POST' }),
 };

@@ -6,6 +6,7 @@ export default function Navbar() {
   const { t, lang, setLang, theme, toggleTheme, bn } = useApp();
   const { pathname } = useLocation();
   const onAdmin = pathname.startsWith('/admin');
+  const onPower = pathname.startsWith('/power');
 
   return (
     <header className="navbar">
@@ -18,8 +19,11 @@ export default function Navbar() {
           </span>
         </Link>
         <nav className="nav-actions">
-          <Link to="/" className={cn('nav-link', !onAdmin && 'active')}>
+          <Link to="/" className={cn('nav-link', !onAdmin && !onPower && 'active')}>
             {t('home')}
+          </Link>
+          <Link to="/power" className={cn('nav-link', onPower && 'active')}>
+            ⚡ {t('powerDashboard')}
           </Link>
           <Link to="/admin" className={cn('nav-link', onAdmin && 'active')}>
             <span className="nav-lock">🔐</span> {t('admin')}

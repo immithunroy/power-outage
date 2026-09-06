@@ -16,6 +16,19 @@ const blankForm = {
   timeoutSec: 5,
 };
 
+const blankGrowattForm = {
+  enabled: false,
+  apiToken: '',
+  serverUrl: 'https://openapi.growatt.com',
+  plantId: '',
+  deviceSn: '',
+  deviceType: 'sph',
+  batteryCapacityKwh: 16,
+  batteryDoD: 80,
+  reserveSoc: 20,
+  pollingIntervalSec: 300,
+};
+
 export default function Admin() {
   const { t, lang } = useApp();
   const [authed, setAuthed] = useState(null);
@@ -33,6 +46,14 @@ export default function Admin() {
   const [curPw, setCurPw] = useState('');
   const [newPw, setNewPw] = useState('');
   const [pwBusy, setPwBusy] = useState(false);
+
+  const [growattForm, setGrowattForm] = useState(blankGrowattForm);
+  const [growattBusy, setGrowattBusy] = useState(false);
+  const [growattTestRes, setGrowattTestRes] = useState(null);
+  const [growattTestBusy, setGrowattTestBusy] = useState(false);
+  const [growattDiscoverRes, setGrowattDiscoverRes] = useState(null);
+  const [growattDiscoverBusy, setGrowattDiscoverBusy] = useState(false);
+  const [showGrowattToken, setShowGrowattToken] = useState(false);
 
   const notify = (msg, status = 'ok') => {
     setFlash({ msg, status });
@@ -59,6 +80,23 @@ export default function Admin() {
     try {
       const hs = await api.history(10);
       setOutages(hs.outages || []);
+    } catch {
+      /* ignore */
+    }
+    try {
+      const gs = await api.getGrowattSettings();
+      setGrowattForm({
+        enabled: gs.enabled || false,
+        apiToken: '',
+        serverUrl: gs.serverUrl || 'https://openapi.growatt.com',
+        plantId: gs.plantId || '',
+        deviceSn: gs.deviceSn || '',
+        deviceType: gs.deviceType || 'sph',
+        batteryCapacityKwh: gs.batteryCapacityKwh || 16,
+        batteryDoD: gs.batteryDoD || 80,
+        reserveSoc: gs.reserveSoc || 20,
+        pollingIntervalSec: gs.pollingIntervalSec || 300,
+      });
     } catch {
       /* ignore */
     }
@@ -171,6 +209,52 @@ export default function Admin() {
       downloadBlob(blob, 'outages.csv');
     } catch {
       notify(t('errorGeneric'), 'err');
+    }
+  }
+
+  const setGrowatt = (k) => (e) => {
+    const val = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
+    setGrowattForm((f) => ({ ...f, [k]: val }));
+  };
+
+  async function saveGrowattSettings(e) {
+    e.preventDefault();
+    setGrowattBusy(true);
+    try {
+      const payload = { ...growattForm };
+      if (!payload.apiToken) delete payload.apiToken;
+      await api.updateGrowattSettings(payload);
+      notify(t('savedOk'));
+    } catch (err) {
+      notify(err.message || t('errorGeneric'), 'err');
+    } finally {
+      setGrowattBusy(false);
+    }
+  }
+
+  async function testGrowattConnection() {
+    setGrowattTestBusy(true);
+    setGrowattTestRes(null);
+    try {
+      const r = await api.testGrowatt();
+      setGrowattTestRes(r);
+    } catch (err) {
+      setGrowattTestRes({ connected: false, error: err.message });
+    } finally {
+      setGrowattTestBusy(false);
+    }
+  }
+
+  async function discoverGrowattDevices() {
+    setGrowattDiscoverBusy(true);
+    setGrowattDiscoverRes(null);
+    try {
+      const r = await api.discoverGrowatt();
+      setGrowattDiscoverRes(r);
+    } catch (err) {
+      setGrowattDiscoverRes({ ok: false, error: err.message });
+    } finally {
+      setGrowattDiscoverBusy(false);
     }
   }
 
@@ -362,6 +446,153 @@ export default function Admin() {
                 {pwBusy ? '…' : t('changePw')}
               </button>
             </form>
+          </div>
+
+          <div className="card growatt-card">
+            <h3 className="section-title">☀️ {t('growattIntegration')}</h3>
+            <p className="section-sub">{t('growattSettings')}</p>
+
+            <form onSubmit={saveGrowattSettings}>
+              <label className="field field-checkbox">
+                <input
+                  type="checkbox"
+                  checked={growattForm.enabled}
+                  onChange={setGrowatt('enabled')}
+                />
+                <span>{t('growattEnable')}</span>
+              </label>
+
+              <label className="field">
+                <span>{t('growattToken')}</span>
+                <div className="field-with-toggle">
+                  <input
+                    type={showGrowattToken ? 'text' : 'password'}
+                    value={growattForm.apiToken}
+                    onChange={setGrowatt('apiToken')}
+                    placeholder={t('growattTokenPh')}
+                  />
+                  <button
+                    type="button"
+                    className="btn btn-ghost btn-sm"
+                    onClick={() => setShowGrowattToken(!showGrowattToken)}
+                  >
+                    {showGrowattToken ? '🙈' : '👁️'}
+                  </button>
+                </div>
+              </label>
+
+              <label className="field">
+                <span>{t('growattServer')}</span>
+                <select value={growattForm.serverUrl} onChange={setGrowatt('serverUrl')}>
+                  <option value="https://openapi.growatt.com">Global (openapi.growatt.com)</option>
+                  <option value="https://openapi-us.growatt.com">North America (openapi-us.growatt.com)</option>
+                  <option value="https://openapi-cn.growatt.com">China (openapi-cn.growatt.com)</option>
+                  <option value="http://openapi-au.growatt.com">Australia/NZ (openapi-au.growatt.com)</option>
+                </select>
+              </label>
+
+              <div className="field-row">
+                <label className="field">
+                  <span>{t('growattPlantId')}</span>
+                  <input type="text" value={growattForm.plantId} onChange={setGrowatt('plantId')} placeholder="Optional" />
+                </label>
+                <label className="field">
+                  <span>{t('growattDeviceSn')}</span>
+                  <input type="text" value={growattForm.deviceSn} onChange={setGrowatt('deviceSn')} placeholder="Optional" />
+                </label>
+              </div>
+
+              <div className="field-row">
+                <label className="field">
+                  <span>{t('growattDeviceType')}</span>
+                  <select value={growattForm.deviceType} onChange={setGrowatt('deviceType')}>
+                    <option value="sph">SPH (Hybrid)</option>
+                    <option value="max">MAX Series</option>
+                    <option value="min">MIN/TLX Series</option>
+                    <option value="storage">Storage/Battery</option>
+                    <option value="noah">NOAH/NEXA</option>
+                    <option value="wit">WIT Devices</option>
+                  </select>
+                </label>
+                <label className="field">
+                  <span>{t('growattBatteryCapacity')}</span>
+                  <input type="number" min="0" step="0.1" value={growattForm.batteryCapacityKwh} onChange={setGrowatt('batteryCapacityKwh')} />
+                </label>
+                <label className="field">
+                  <span>{t('growattDoD')}</span>
+                  <input type="number" min="10" max="100" value={growattForm.batteryDoD} onChange={setGrowatt('batteryDoD')} />
+                </label>
+              </div>
+
+              <div className="field-row">
+                <label className="field">
+                  <span>{t('growattReserve')}</span>
+                  <input type="number" min="0" max="100" value={growattForm.reserveSoc} onChange={setGrowatt('reserveSoc')} />
+                </label>
+                <label className="field">
+                  <span>{t('growattPolling')}</span>
+                  <input type="number" min="60" value={growattForm.pollingIntervalSec} onChange={setGrowatt('pollingIntervalSec')} />
+                </label>
+              </div>
+
+              <div className="growatt-actions">
+                <button type="submit" className="btn btn-primary" disabled={growattBusy}>
+                  {growattBusy ? t('saving') + '…' : t('saveSettings')}
+                </button>
+                <button type="button" className="btn btn-secondary" onClick={testGrowattConnection} disabled={growattTestBusy}>
+                  {growattTestBusy ? t('testing') + '…' : t('growattTest')}
+                </button>
+                <button type="button" className="btn btn-ghost" onClick={discoverGrowattDevices} disabled={growattDiscoverBusy}>
+                  {growattDiscoverBusy ? '…' : t('growattDiscover')}
+                </button>
+              </div>
+            </form>
+
+            {growattTestRes && (
+              <div className={cn('test-result', growattTestRes.connected ? 'test-ok' : 'test-fail')}>
+                {growattTestRes.connected ? (
+                  <>
+                    <span>✅ {t('growattConnected')}</span>
+                    {growattTestRes.plantName && <span>{t('growattPlantName')}: {growattTestRes.plantName}</span>}
+                    {growattTestRes.inverterModel && <span>{t('growattInverterModel')}: {growattTestRes.inverterModel}</span>}
+                    {growattTestRes.batteryModel && <span>{t('growattBatteryModel')}: {growattTestRes.batteryModel}</span>}
+                  </>
+                ) : (
+                  <span>❌ {growattTestRes.error || t('growattDisconnected')}</span>
+                )}
+              </div>
+            )}
+
+            {growattDiscoverRes && growattDiscoverRes.ok && (
+              <div className="growatt-discover">
+                {growattDiscoverRes.plants?.length > 0 && (
+                  <div className="discover-section">
+                    <h4>Plants</h4>
+                    {growattDiscoverRes.plants.map((p) => (
+                      <div key={p.plantId} className="discover-item">
+                        <span>{p.plantName || p.plantId}</span>
+                        <button type="button" className="btn btn-ghost btn-sm" onClick={() => setGrowattForm((f) => ({ ...f, plantId: p.plantId }))}>
+                          Select
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {growattDiscoverRes.devices?.length > 0 && (
+                  <div className="discover-section">
+                    <h4>Devices</h4>
+                    {growattDiscoverRes.devices.map((d) => (
+                      <div key={d.deviceSn} className="discover-item">
+                        <span>{d.alias || d.deviceSn} ({d.deviceType})</span>
+                        <button type="button" className="btn btn-ghost btn-sm" onClick={() => setGrowattForm((f) => ({ ...f, deviceSn: d.deviceSn }))}>
+                          Select
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           <div className="card danger-card">
