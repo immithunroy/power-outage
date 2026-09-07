@@ -222,7 +222,7 @@ export default function Power() {
       <InverterDetails deviceDetails={deviceDetails} />
 
       {/* Smart Meter */}
-      <SmartMeter meterData={null} />
+      <SmartMeter meterData={dashboard.smartMeterData} />
 
       {/* Today's Summary */}
       <div className="card power-info-card">

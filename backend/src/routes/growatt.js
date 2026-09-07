@@ -175,6 +175,7 @@ router.get('/growatt/dashboard', async (_req, res) => {
     let deviceInfo = null;
     let wifiStrength = null;
     let smartMeters = [];
+    let smartMeterData = null;
     let alarms = null;
 
     if (settings.deviceSn) {
@@ -184,6 +185,17 @@ router.get('/growatt/dashboard', async (_req, res) => {
       try { deviceInfo = await growattService.getDeviceInfoV4(settings.deviceSn, type); } catch {}
       try { wifiStrength = await growattService.getWifiStrengthV4(settings.deviceSn, type); } catch {}
       try { alarms = await growattService.getAlarms(); } catch {}
+
+      const datalogSn = deviceInfo?.info?.datalogSn || deviceInfo?.info?.datalog_sn || deviceInfo?.info?.sn;
+      if (datalogSn) {
+        try {
+          const meterList = await growattService.getSmartMeters(datalogSn);
+          smartMeters = meterList?.meters || [];
+          if (smartMeters.length > 0 && smartMeters[0].address) {
+            smartMeterData = await growattService.getSmartMeterData(datalogSn, smartMeters[0].address);
+          }
+        } catch {}
+      }
     }
 
     res.json({
@@ -194,6 +206,7 @@ router.get('/growatt/dashboard', async (_req, res) => {
       deviceInfo,
       wifiStrength,
       smartMeters,
+      smartMeterData,
       alarms,
     });
   } catch (e) {
