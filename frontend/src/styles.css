@@ -1814,4 +1814,298 @@ body {
   .flow-node-value {
     font-size: 14px;
   }
+  .device-info-grid {
+    grid-template-columns: 1fr;
+  }
+  .inverter-grid {
+    grid-template-columns: 1fr;
+  }
+  .meter-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ============ Section labels ============ */
+.section-label {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+  margin: 24px 0 8px 4px;
+}
+
+/* ============ Insights grid ============ */
+.insights-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.insight-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 16px 12px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  text-align: center;
+}
+
+.insight-icon {
+  font-size: 24px;
+}
+
+.insight-label {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.insight-value {
+  font-size: 18px;
+  font-weight: 700;
+}
+
+/* ============ Power header right ============ */
+.power-header-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.power-header-wifi {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.wifi-icon {
+  font-size: 16px;
+}
+
+.wifi-pct {
+  font-weight: 600;
+}
+
+/* ============ Device Info card ============ */
+.device-info-card {
+  padding: 24px;
+}
+
+.device-info-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+
+.device-info-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.info-section-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 4px;
+}
+
+.info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+}
+
+.info-label {
+  color: var(--muted);
+}
+
+.info-value {
+  font-weight: 600;
+  color: var(--text);
+}
+
+/* ============ WiFi strength ============ */
+.wifi-strength {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+}
+
+.wifi-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 4px;
+  height: 40px;
+}
+
+.wifi-bar {
+  width: 8px;
+  border-radius: 3px;
+  transition: background 0.3s;
+}
+
+/* ============ Status badges ============ */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.badge-success {
+  background: var(--success-soft);
+  color: var(--success);
+}
+
+.badge-danger {
+  background: var(--danger-soft);
+  color: var(--danger);
+}
+
+/* ============ Smart Meter card ============ */
+.smart-meter-card {
+  padding: 24px;
+}
+
+.meter-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.meter-phase {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px;
+  background: var(--card-2);
+  border-radius: 12px;
+  border: 1px solid var(--border);
+}
+
+.meter-phase-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--primary);
+  text-align: center;
+}
+
+.meter-value {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+}
+
+.meter-label {
+  color: var(--muted);
+}
+
+.meter-number {
+  font-weight: 600;
+}
+
+.meter-unit {
+  font-size: 11px;
+  color: var(--muted);
+  margin-left: 2px;
+}
+
+.meter-summary {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+/* ============ Inverter Details card ============ */
+.inverter-details-card {
+  padding: 24px;
+}
+
+.inverter-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 24px;
+}
+
+.inverter-section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.inverter-schedule {
+  margin-top: 8px;
+}
+
+.setting-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+}
+
+.setting-label {
+  color: var(--muted);
+}
+
+.setting-value {
+  font-weight: 600;
+  color: var(--text);
+}
+
+.text-success { color: var(--success) !important; }
+.text-muted { color: var(--muted) !important; }
+.text-danger { color: var(--danger) !important; }
+
+/* ============ Historical Data card ============ */
+.historical-card {
+  padding: 24px;
+}
+
+.historical-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.date-input {
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 13px;
+  background: var(--card);
+  color: var(--text);
+}
+
+.chart-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 200px;
+  color: var(--muted);
 }

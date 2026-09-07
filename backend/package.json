@@ -1,7 +1,7 @@
 {
-  "name": "outage-backend",
+  "name": "power-monitor-backend",
   "version": "1.0.0",
-  "description": "Outage Watch backend - pinger + reports API",
+  "description": "Power Monitor backend - solar/grid/battery monitoring with Growatt V4 API",
   "main": "src/server.js",
   "scripts": {
     "start": "node src/server.js",

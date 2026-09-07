@@ -4,6 +4,10 @@ import { useApp } from '../context/AppContext';
 import PowerFlow from '../components/PowerFlow';
 import BatteryStatus from '../components/BatteryStatus';
 import EnergyCharts from '../components/EnergyCharts';
+import DeviceInfo from '../components/DeviceInfo';
+import SmartMeter from '../components/SmartMeter';
+import InverterDetails from '../components/InverterDetails';
+import HistoricalData from '../components/HistoricalData';
 import { digits, cn } from '../utils';
 
 function StatusCard({ icon, label, value, unit, sub, color, active }) {
@@ -22,9 +26,19 @@ function StatusCard({ icon, label, value, unit, sub, color, active }) {
   );
 }
 
+function InsightCard({ icon, label, value, color }) {
+  return (
+    <div className="insight-card">
+      <span className="insight-icon" style={{ color }}>{icon}</span>
+      <span className="insight-label">{label}</span>
+      <span className="insight-value" style={{ color }}>{value}</span>
+    </div>
+  );
+}
+
 export default function Power() {
   const { t, lang, digits: D } = useApp();
-  const [status, setStatus] = useState(null);
+  const [dashboard, setDashboard] = useState(null);
   const [energy, setEnergy] = useState(null);
   const [energyPeriod, setEnergyPeriod] = useState('week');
   const [now, setNow] = useState(Date.now());
@@ -35,10 +49,10 @@ export default function Power() {
     return () => clearInterval(id);
   }, []);
 
-  const loadStatus = useCallback(async () => {
+  const loadDashboard = useCallback(async () => {
     try {
-      const s = await api.growattStatus();
-      setStatus(s);
+      const d = await api.growattDashboard();
+      setDashboard(d);
       setError(null);
     } catch (e) {
       setError(e.message);
@@ -46,16 +60,16 @@ export default function Power() {
   }, []);
 
   useEffect(() => {
-    loadStatus();
-    const id = setInterval(loadStatus, 15000);
+    loadDashboard();
+    const id = setInterval(loadDashboard, 15000);
     return () => clearInterval(id);
-  }, [loadStatus]);
+  }, [loadDashboard]);
 
   useEffect(() => {
     api.growattEnergy(energyPeriod).then(setEnergy).catch(() => {});
   }, [energyPeriod]);
 
-  if (error && !status) {
+  if (error && !dashboard) {
     return (
       <div className="page power-page">
         <div className="card power-error-card">
@@ -70,7 +84,7 @@ export default function Power() {
     );
   }
 
-  if (!status || !status.enabled) {
+  if (!dashboard || !dashboard.status || !dashboard.status.enabled) {
     return (
       <div className="page power-page">
         <div className="card power-disabled-card">
@@ -78,7 +92,7 @@ export default function Power() {
           <p className="section-sub">{t('powerDashboardSub')}</p>
           <div className="power-disabled">
             <span className="power-disabled-icon">🔌</span>
-            <span>{status?.error || t('growattDisconnected')}</span>
+            <span>{dashboard?.status?.error || t('growattDisconnected')}</span>
             <span className="power-disabled-hint">Configure Growatt integration in Admin settings</span>
           </div>
         </div>
@@ -86,12 +100,25 @@ export default function Power() {
     );
   }
 
+  const status = dashboard.status;
   const solar = status.solar || {};
   const grid = status.grid || {};
   const load_ = status.load || {};
   const inverter = status.inverter || {};
   const battery = status.battery || {};
   const energyData = status.energy || {};
+  const power = status.power || {};
+  const deviceDetails = dashboard.deviceDetails;
+  const deviceInfo = dashboard.deviceInfo;
+  const wifiStrength = dashboard.wifiStrength;
+
+  const totalSolar = solar.energy_today || 0;
+  const totalGridImport = grid.energy_import_today || 0;
+  const totalGridExport = grid.energy_export_today || 0;
+  const totalLoad = energyData.load_today || 0;
+  const selfConsumption = totalSolar > 0 ? Math.min(100, ((totalSolar - totalGridExport) / totalSolar * 100)) : 0;
+  const gridDependency = totalLoad > 0 ? Math.min(100, (totalGridImport / totalLoad * 100)) : 0;
+  const batteryUtil = (battery.capacityKwh || 0) > 0 ? Math.min(100, ((energyData.battery_charge_today || 0) / (battery.capacityKwh || 1) * 100)) : 0;
 
   return (
     <div className="page power-page">
@@ -100,14 +127,24 @@ export default function Power() {
           <h2 className="section-title">⚡ {t('powerDashboard')}</h2>
           <p className="section-sub">{t('powerDashboardSub')}</p>
         </div>
-        <div className="power-header-status">
-          <span className={cn('status-dot', inverter.status === 'online' ? 'dot-green' : inverter.status === 'fault' ? 'dot-red' : 'dot-yellow')} />
-          <span className="power-header-label">
-            {inverter.status === 'online' ? t('growattOnline') : inverter.status === 'fault' ? t('growattFault') : inverter.status}
-          </span>
+        <div className="power-header-right">
+          <div className="power-header-status">
+            <span className={cn('status-dot', inverter.status === 'online' ? 'dot-green' : inverter.status === 'fault' ? 'dot-red' : 'dot-yellow')} />
+            <span className="power-header-label">
+              {inverter.status === 'online' ? t('growattOnline') : inverter.status === 'fault' ? t('growattFault') : inverter.status}
+            </span>
+          </div>
+          {wifiStrength?.wifi?.wifiStrength != null && (
+            <div className="power-header-wifi">
+              <span className="wifi-icon">📶</span>
+              <span className="wifi-pct">{wifiStrength.wifi.wifiStrength}%</span>
+            </div>
+          )}
         </div>
       </div>
 
+      {/* System Overview */}
+      <div className="section-label">{t('systemOverview')}</div>
       <div className="power-cards-grid">
         <StatusCard
           icon="☀️"
@@ -147,84 +184,75 @@ export default function Power() {
         />
       </div>
 
+      {/* Energy Insights */}
+      <div className="section-label">{t('energyBreakdown')}</div>
+      <div className="insights-grid">
+        <InsightCard icon="🔄" label={t('selfConsumption')} value={`${selfConsumption.toFixed(0)}%`} color="var(--success)" />
+        <InsightCard icon="🔌" label={t('gridDependency')} value={`${gridDependency.toFixed(0)}%`} color="var(--primary)" />
+        <InsightCard icon="🔋" label={t('batteryUtilization')} value={`${batteryUtil.toFixed(0)}%`} color="var(--warn)" />
+        <InsightCard icon="⚡" label={t('solarTotal')} value={`${D(solar.energy_total?.toFixed(0) || '0')} kWh`} color="var(--warn)" />
+        <InsightCard icon="📥" label={t('gridImportToday')} value={`${D(totalGridImport.toFixed(1))} kWh`} color="var(--primary)" />
+        <InsightCard icon="📤" label={t('gridExportToday')} value={`${D(totalGridExport.toFixed(1))} kWh`} color="var(--success)" />
+      </div>
+
+      {/* Power Flow */}
       <PowerFlow status={status} />
 
+      {/* Battery */}
       <BatteryStatus status={status} />
 
+      {/* Energy History */}
       <EnergyCharts
         energy={energy}
         period={energyPeriod}
         onPeriodChange={setEnergyPeriod}
       />
 
+      {/* Historical Data */}
+      <HistoricalData />
+
+      {/* Device Info */}
+      <DeviceInfo
+        deviceDetails={deviceDetails}
+        deviceInfo={deviceInfo}
+        wifiStrength={wifiStrength}
+      />
+
+      {/* Inverter Details */}
+      <InverterDetails deviceDetails={deviceDetails} />
+
+      {/* Smart Meter */}
+      <SmartMeter meterData={null} />
+
+      {/* Today's Summary */}
       <div className="card power-info-card">
+        <h3 className="section-title">{t('energyBreakdown')}</h3>
         <div className="power-info-grid">
           <div className="power-info-item">
             <span className="power-info-label">{t('solarToday')}</span>
-            <span className="power-info-value">{D(solar.energy_today?.toFixed(1) || '0')} kWh</span>
+            <span className="power-info-value">{D(totalSolar.toFixed(1))} kWh</span>
           </div>
           <div className="power-info-item">
             <span className="power-info-label">{t('gridImportToday')}</span>
-            <span className="power-info-value">{D(grid.energy_import_today?.toFixed(1) || '0')} kWh</span>
+            <span className="power-info-value">{D(totalGridImport.toFixed(1))} kWh</span>
           </div>
           <div className="power-info-item">
             <span className="power-info-label">{t('gridExportToday')}</span>
-            <span className="power-info-value">{D(grid.energy_export_today?.toFixed(1) || '0')} kWh</span>
+            <span className="power-info-value">{D(totalGridExport.toFixed(1))} kWh</span>
           </div>
           <div className="power-info-item">
             <span className="power-info-label">{t('loadToday')}</span>
-            <span className="power-info-value">{D(energyData.load_today?.toFixed(1) || '0')} kWh</span>
+            <span className="power-info-value">{D(totalLoad.toFixed(1))} kWh</span>
           </div>
           <div className="power-info-item">
             <span className="power-info-label">{t('batteryCharge')}</span>
-            <span className="power-info-value">{D(energyData.battery_charge_today?.toFixed(1) || '0')} kWh</span>
+            <span className="power-info-value">{D((energyData.battery_charge_today || 0).toFixed(1))} kWh</span>
           </div>
           <div className="power-info-item">
             <span className="power-info-label">{t('batteryDischarge')}</span>
-            <span className="power-info-value">{D(energyData.battery_discharge_today?.toFixed(1) || '0')} kWh</span>
+            <span className="power-info-value">{D((energyData.battery_discharge_today || 0).toFixed(1))} kWh</span>
           </div>
         </div>
-      </div>
-
-      <div className="card power-details-card">
-        <h3 className="section-title">{t('inverterStatus')}</h3>
-        <div className="power-details-grid">
-          <div className="pd-item">
-            <span className="pd-label">{t('inverterMode')}</span>
-            <span className="pd-value">{inverter.mode || '—'}</span>
-          </div>
-          <div className="pd-item">
-            <span className="pd-label">{t('inverterTemp')}</span>
-            <span className="pd-value">{inverter.temperature ? `${D(inverter.temperature)}°C` : '—'}</span>
-          </div>
-          <div className="pd-item">
-            <span className="pd-label">{t('gridStatus')}</span>
-            <span className={cn('pd-value', grid.available ? 'text-success' : 'text-danger')}>
-              {grid.available ? t('growattOnline') : t('growattOffline')}
-            </span>
-          </div>
-          <div className="pd-item">
-            <span className="pd-label">{t('gridImport')}</span>
-            <span className="pd-value">{grid.voltage ? `${D(grid.voltage)}V` : '—'}</span>
-          </div>
-        </div>
-
-        {(inverter.fault_code > 0 || inverter.warning_code > 0) && (
-          <div className="power-alerts">
-            {inverter.fault_code > 0 && (
-              <div className="power-alert alert-fault">
-                <span className="alert-icon">🚨</span>
-                <span>{t('growattFault')}: {inverter.error_text || inverter.fault_code}</span>
-              </div>
-            )}
-            {inverter.warning_code > 0 && (
-              <div className="power-alert alert-warning">
-                <span className="alert-icon">⚠️</span>
-                <span>{t('growattWarning')}: {inverter.warn_text || inverter.warning_code}</span>
-              </div>
-            )}
-          </div>
-        )}
       </div>
     </div>
   );

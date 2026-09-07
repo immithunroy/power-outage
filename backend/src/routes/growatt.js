@@ -165,4 +165,40 @@ router.get('/growatt/v4/historical', requireAuth, async (req, res) => {
   }
 });
 
+router.get('/growatt/dashboard', async (_req, res) => {
+  try {
+    const status = await growattService.getRealtimeStatus();
+    const settings = await getPublicGrowattSettings();
+
+    let deviceDetails = null;
+    let powerRealtime = null;
+    let deviceInfo = null;
+    let wifiStrength = null;
+    let smartMeters = [];
+    let alarms = null;
+
+    if (settings.deviceSn) {
+      const type = settings.deviceType || 'sph';
+      try { deviceDetails = await growattService.getDeviceDetailsV4(settings.deviceSn, type); } catch {}
+      try { powerRealtime = await growattService.getPowerRealtimeV4(settings.deviceSn, type); } catch {}
+      try { deviceInfo = await growattService.getDeviceInfoV4(settings.deviceSn, type); } catch {}
+      try { wifiStrength = await growattService.getWifiStrengthV4(settings.deviceSn, type); } catch {}
+      try { alarms = await growattService.getAlarms(); } catch {}
+    }
+
+    res.json({
+      status,
+      settings,
+      deviceDetails,
+      powerRealtime,
+      deviceInfo,
+      wifiStrength,
+      smartMeters,
+      alarms,
+    });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 module.exports = router;

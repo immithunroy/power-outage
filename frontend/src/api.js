@@ -63,6 +63,7 @@ export const api = {
   growattDeviceInfo: (deviceSn, deviceType) => request(`/growatt/v4/device-info?deviceSn=${deviceSn}&deviceType=${deviceType}`),
   growattWifiStrength: (deviceSn, deviceType) => request(`/growatt/v4/wifi?deviceSn=${deviceSn}&deviceType=${deviceType}`),
   growattHistorical: (deviceSn, deviceType, date) => request(`/growatt/v4/historical?deviceSn=${deviceSn}&deviceType=${deviceType}&date=${date}`),
+  growattDashboard: () => request('/growatt/dashboard'),
   getGrowattSettings: () => request('/growatt/settings'),
   updateGrowattSettings: (s) => request('/growatt/settings', { method: 'POST', body: JSON.stringify(s) }),
   testGrowatt: () => request('/growatt/test', { method: 'POST' }),
